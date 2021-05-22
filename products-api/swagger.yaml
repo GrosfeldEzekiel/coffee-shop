@@ -8,16 +8,20 @@ definitions:
         type: string
         x-go-name: Description
       id:
+        description: the id of the product
         format: int64
         type: integer
         x-go-name: ID
       name:
+        description: the name of the product
         type: string
         x-go-name: Name
       price:
         format: float
         type: number
         x-go-name: Price
+    required:
+    - name
     type: object
     x-go-package: github.com/GrosfeldEzekiel/coffee-shop/products-api/data
 info:
@@ -27,16 +31,37 @@ info:
 paths:
   /products:
     get:
-      description: Returns a list of
+      description: Returns a list of all the products
       operationId: listProducts
       responses:
         "200":
           $ref: '#/responses/productsResponse'
       tags:
       - products
+  /products/{id}:
+    put:
+      description: Edits the product
+      operationId: editProduct
+      parameters:
+      - description: The ID of the product
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/editedProduct'
+      tags:
+      - products
 produces:
 - application/json
 responses:
+  editedProduct:
+    description: ""
+    schema:
+      $ref: '#/definitions/Product'
   productsResponse:
     description: A list of products in the response
     schema:

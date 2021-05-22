@@ -19,14 +19,35 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/GrosfeldEzekiel/coffee-shop/products-api/data"
-	"github.com/gorilla/mux"
 )
 
 type Products struct {
 	l *log.Logger
+}
+
+// A list of products in the response
+// swagger:response productsResponse
+type productsResponse struct {
+	// All of products
+	// in: body
+	Body []data.Product
+}
+
+// swagger:response editedProduct
+type editedProduct struct {
+	// Edited Product
+	// in: body
+	Body data.Product
+}
+
+// swagger:parameters editProduct
+type productIdParameter struct {
+	// The ID of the product
+	// in: path
+	// required: true
+	ID int `json:"id"`
 }
 
 func NewProducts(l *log.Logger) *Products {
@@ -39,29 +60,6 @@ func (p *Products) CreateProduct(rw http.ResponseWriter, r *http.Request) {
 	product := r.Context().Value(KeyProduct{}).(*data.Product)
 
 	data.AddProduct(product)
-}
-
-func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handling PUT")
-
-	vars := mux.Vars(r)
-
-	idString := vars["id"]
-
-	id, _ := strconv.Atoi(idString)
-
-	product := r.Context().Value(KeyProduct{}).(*data.Product)
-
-	uError := data.UpdateProduct(id, product)
-
-	if uError == data.ErrorProductNotFound {
-		http.Error(rw, "Product not found", http.StatusNotFound)
-		return
-	}
-	if uError != nil {
-		http.Error(rw, "Something went wrong", http.StatusInternalServerError)
-		return
-	}
 }
 
 type KeyProduct struct{}

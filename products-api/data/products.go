@@ -10,8 +10,16 @@ import (
 	"github.com/go-playground/validator"
 )
 
+// swagger:model
 type Product struct {
-	ID          int     `json:"id"`
+	// the id of the product
+	//
+	// required: false
+	ID int `json:"id"`
+
+	// the name of the product
+	//
+	// required: true
 	Name        string  `json:"name" validate:"required"`
 	Description string  `json:"description" validate:"required,desc"`
 	Price       float32 `json:"price" validate:"required,gt=0"`
@@ -44,6 +52,11 @@ func validateDescription(fl validator.FieldLevel) bool {
 func (p *Product) FromJSON(r io.Reader) error {
 	d := json.NewDecoder(r)
 	return d.Decode(p)
+}
+
+func (p *Product) ToJSONSingle(w io.Writer) error {
+	e := json.NewEncoder(w)
+	return e.Encode(p)
 }
 
 func (p *Products) ToJSON(w io.Writer) error {

@@ -6,18 +6,12 @@ import (
 	"github.com/GrosfeldEzekiel/coffee-shop/products-api/data"
 )
 
-// A list of products in the response
-// swagger:response productsResponse
-type productsResponse struct {
-	// All of products
-	// in: body
-	Body []data.Product
-}
-
 // swagger:route GET /products products listProducts
-// Returns a list of
+// Returns a list of all the products
 // responses:
 //	200: productsResponse
+
+// Get all the products
 func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
 
 	products := data.GetProducts()
