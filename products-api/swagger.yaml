@@ -1,0 +1,49 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  Product:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      price:
+        format: float
+        type: number
+        x-go-name: Price
+    type: object
+    x-go-package: github.com/GrosfeldEzekiel/coffee-shop/products-api/data
+info:
+  description: documentation for product API
+  title: Product API.
+  version: 1.0.0
+paths:
+  /products:
+    get:
+      description: Returns a list of
+      operationId: listProducts
+      responses:
+        "200":
+          $ref: '#/responses/productsResponse'
+      tags:
+      - products
+produces:
+- application/json
+responses:
+  productsResponse:
+    description: A list of products in the response
+    schema:
+      items:
+        $ref: '#/definitions/Product'
+      type: array
+schemes:
+- http
+- https
+swagger: "2.0"

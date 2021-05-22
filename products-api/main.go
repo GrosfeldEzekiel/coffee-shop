@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/GrosfeldEzekiel/coffee-shop/products-api/handlers"
+	"github.com/go-openapi/runtime/middleware"
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -16,9 +18,24 @@ func main() {
 
 	ph := handlers.NewProducts(l)
 
-	sm := http.NewServeMux()
+	sm := mux.NewRouter()
 
-	sm.Handle("/products", ph)
+	getRouter := sm.Methods(http.MethodGet).Subrouter()
+	getRouter.HandleFunc("/products", ph.GetProducts)
+
+	putRouter := sm.Methods(http.MethodPut).Subrouter()
+	putRouter.HandleFunc("/products/{id:[0-9]+}", ph.UpdateProducts)
+	putRouter.Use(ph.MiddlewareProductValidation)
+
+	postRouter := sm.Methods(http.MethodPost).Subrouter()
+	postRouter.HandleFunc("/products", ph.CreateProduct)
+	postRouter.Use(ph.MiddlewareProductValidation)
+
+	ops := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	sh := middleware.Redoc(ops, nil)
+
+	getRouter.Handle("/docs", sh)
+	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
 	s := http.Server{
 		Addr:         ":8080",
@@ -29,8 +46,9 @@ func main() {
 	}
 
 	go func() {
-		err := s.ListenAndServe()
+		l.Println("Listening on port 8080")
 
+		err := s.ListenAndServe()
 		if err != nil {
 			l.Fatal(err)
 		}
