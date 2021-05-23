@@ -1,0 +1,15 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Remote",
+			"type": "go",
+			"request": "launch",
+			"mode": "debug",
+			"port": 8080,
+			"host": "127.0.0.1",
+			"program": "${workspaceFolder}/products-api",
+			"env": {}
+		}
+	]
+}

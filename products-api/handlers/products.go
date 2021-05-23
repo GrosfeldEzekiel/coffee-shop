@@ -54,14 +54,6 @@ func NewProducts(l *log.Logger) *Products {
 	return &Products{l}
 }
 
-func (p *Products) CreateProduct(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handling POST")
-
-	product := r.Context().Value(KeyProduct{}).(*data.Product)
-
-	data.AddProduct(product)
-}
-
 type KeyProduct struct{}
 
 func (p *Products) MiddlewareProductValidation(next http.Handler) http.Handler {
