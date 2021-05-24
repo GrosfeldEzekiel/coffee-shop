@@ -22,7 +22,7 @@ func main() {
 	log := hclog.Default()
 
 	// gRPC client
-	conn, err := grpc.Dial("localhost:9092", grpc.WithInsecure())
+	conn, err := grpc.Dial(":9092", grpc.WithInsecure())
 	if err != nil {
 		log.Error(err.Error())
 		os.Exit(1)

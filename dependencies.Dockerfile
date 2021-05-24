@@ -1,4 +1,4 @@
-FROM golang:1.16-alpine AS dep
+FROM golang:1.16-alpine
 # Add the module files and download dependencies.
 ENV GO111MODULE=on
 COPY ./go.mod /go/src/app/go.mod

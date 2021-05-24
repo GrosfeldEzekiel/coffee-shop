@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currency-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: currency
+  template:
+    metadata:
+      labels:
+        app: currency
+    spec:
+      containers:
+        - name: currency
+          image: ezegrosfeld/currency
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: currency-srv
+spec:
+  selector:
+    app: currency
+  ports:
+    - name: grpc
+      protocol: TCP
+      port: 9092
+      targetPort: 9092

@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	coffee_helper "github.com/GrosfeldEzekiel/coffee-shop/common/helpers"
 	"github.com/GrosfeldEzekiel/coffee-shop/products-api/data"
 )
 
@@ -11,5 +12,7 @@ func (p *Products) CreateProduct(rw http.ResponseWriter, r *http.Request) {
 
 	product := r.Context().Value(KeyProduct{}).(*data.Product)
 
-	data.AddProduct(product)
+	prod := data.AddProduct(product)
+
+	coffee_helper.ToJSON(prod, rw)
 }

@@ -40,8 +40,9 @@ func (p *Products) GetProduct(rw http.ResponseWriter, r *http.Request) {
 
 	product, err := p.productsDB.GetProduct(id, cur)
 	if err != nil {
-		e := coffee_errors.Errors{coffee_errors.Error{Mesagge: "There was a problem with the currency"}}
+		e := coffee_errors.Errors{coffee_errors.Error{Mesagge: err.Error()}}
 		coffee_errors.HandleError(e, rw, http.StatusBadRequest)
+		return
 	}
 
 	err = product.ToJSONSingle(rw)

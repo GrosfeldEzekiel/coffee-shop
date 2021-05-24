@@ -11,6 +11,8 @@ import (
 	"github.com/GrosfeldEzekiel/coffee-shop/common/protos"
 	"github.com/go-playground/validator"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // swagger:model
@@ -72,11 +74,12 @@ func (p *Products) ToJSON(w io.Writer) error {
 	return e.Encode(p)
 }
 
-func AddProduct(p *Product) {
+func AddProduct(p *Product) Product {
 	p.ID = getNextId()
 	p.CreatedAt = time.Now().UTC().String()
 	p.UpdatedAt = time.Now().UTC().String()
 	productList = append(productList, p)
+	return *p
 }
 
 func getNextId() int {
@@ -111,10 +114,10 @@ func (p *ProductsDB) GetProduct(id int, currency string) (Product, error) {
 		return product, nil
 	}
 
-	rate, _ := p.getRate(currency)
+	rate, err := p.getRate(currency)
 
 	product.Price = product.Price * rate
-	return product, nil
+	return product, err
 }
 
 func UpdateProduct(id int, p *Product) error {
@@ -166,5 +169,14 @@ func (p *ProductsDB) getRate(destination string) (float64, error) {
 	}
 
 	resp, err := p.currency.GetRate(context.Background(), rr)
+	if err != nil {
+		if s, ok := status.FromError(err); ok {
+			md := s.Details()[0].(*protos.RateRequest)
+			if s.Code() == codes.InvalidArgument {
+				return -1, fmt.Errorf("unable to get rate from server, base: %s and destination: %s cannot be the same", md.Base.String(), md.Destination.String())
+			}
+			return -1, fmt.Errorf("unable to get rate from server, base :%s, destination: %s", md.Base.String(), md.Destination.String())
+		}
+	}
 	return resp.Rate, err
 }

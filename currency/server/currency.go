@@ -6,6 +6,8 @@ import (
 
 	"github.com/GrosfeldEzekiel/coffee-shop/common/protos"
 	"github.com/GrosfeldEzekiel/coffee-shop/currency/data"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type Currency struct {
@@ -19,8 +21,11 @@ func NewCurrency(r *data.ExchangeRates, l *log.Logger) *Currency {
 }
 
 func (c *Currency) GetRate(ctx context.Context, rr *protos.RateRequest) (*protos.RateResponse, error) {
-	c.l.Println("Handling get rate, base: ", rr.GetBase())
-	c.l.Println("Handling get rate, destination:  ", rr.GetDestination())
+	if rr.Base == rr.Destination {
+		err := status.Newf(codes.InvalidArgument, "Base currency cannot be equal to destination")
+		err, _ = err.WithDetails(rr)
+		return nil, err.Err()
+	}
 
 	rate, err := c.rates.GetRate(rr.GetBase().String(), rr.GetDestination().String())
 	if err != nil {
