@@ -15,7 +15,7 @@ import (
 
 // Update product
 func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handling PUT")
+	p.l.Info("Handling PUT")
 
 	vars := mux.Vars(r)
 

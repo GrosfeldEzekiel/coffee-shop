@@ -1,13 +1,16 @@
 package data
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"regexp"
 	"time"
 
+	"github.com/GrosfeldEzekiel/coffee-shop/common/protos"
 	"github.com/go-playground/validator"
+	"github.com/hashicorp/go-hclog"
 )
 
 // swagger:model
@@ -22,12 +25,21 @@ type Product struct {
 	// required: true
 	Name        string  `json:"name" validate:"required"`
 	Description string  `json:"description" validate:"required,desc"`
-	Price       float32 `json:"price" validate:"required,gt=0"`
+	Price       float64 `json:"price" validate:"required,gt=0"`
 	CreatedAt   string  `json:"-"`
 	UpdatedAt   string  `json:"-"`
 }
 
 type Products []*Product
+
+type ProductsDB struct {
+	currency protos.CurrencyClient
+	log      hclog.Logger
+}
+
+func NewProductDB(c protos.CurrencyClient, l hclog.Logger) *ProductsDB {
+	return &ProductsDB{c, l}
+}
 
 var ErrorProductNotFound = fmt.Errorf("Product not found")
 
@@ -42,11 +54,7 @@ func validateDescription(fl validator.FieldLevel) bool {
 	regex := regexp.MustCompile(`[.]`)
 	validate := regex.FindAllString(fl.Field().String(), -1)
 
-	if len(validate) > 0 {
-		return true
-	}
-
-	return false
+	return len(validate) > 0
 }
 
 func (p *Product) FromJSON(r io.Reader) error {
@@ -76,8 +84,37 @@ func getNextId() int {
 	return lp.ID + 1
 }
 
-func GetProducts() Products {
-	return productList
+func (p *ProductsDB) GetProducts(currency string) (Products, error) {
+	if currency == "" {
+		return productList, nil
+	}
+
+	pr := Products{}
+
+	rate, _ := p.getRate(currency)
+
+	for _, p := range productList {
+		np := *p
+		np.Price = np.Price * rate
+		pr = append(pr, &np)
+	}
+
+	return pr, nil
+}
+
+func (p *ProductsDB) GetProduct(id int, currency string) (Product, error) {
+	pr, _, _ := findProductById(id)
+
+	product := *pr
+
+	if currency == "" {
+		return product, nil
+	}
+
+	rate, _ := p.getRate(currency)
+
+	product.Price = product.Price * rate
+	return product, nil
 }
 
 func UpdateProduct(id int, p *Product) error {
@@ -104,7 +141,7 @@ func findProductById(id int) (*Product, int, error) {
 }
 
 var productList = []*Product{
-	&Product{
+	{
 		ID:          1,
 		Name:        "Latte",
 		Description: "Delicious Coffee",
@@ -112,7 +149,7 @@ var productList = []*Product{
 		CreatedAt:   time.Now().UTC().String(),
 		UpdatedAt:   time.Now().UTC().String(),
 	},
-	&Product{
+	{
 		ID:          2,
 		Name:        "Espresso",
 		Description: "Delicious Coffee, but strong",
@@ -120,4 +157,14 @@ var productList = []*Product{
 		CreatedAt:   time.Now().UTC().String(),
 		UpdatedAt:   time.Now().UTC().String(),
 	},
+}
+
+func (p *ProductsDB) getRate(destination string) (float64, error) {
+	rr := &protos.RateRequest{
+		Base:        protos.Currencies_EUR,
+		Destination: protos.Currencies(protos.Currencies_value[destination]),
+	}
+
+	resp, err := p.currency.GetRate(context.Background(), rr)
+	return resp.Rate, err
 }

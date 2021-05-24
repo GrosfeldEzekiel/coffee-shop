@@ -7,7 +7,7 @@ import (
 )
 
 func (p *Products) CreateProduct(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handling POST")
+	p.l.Info("Handling POST")
 
 	product := r.Context().Value(KeyProduct{}).(*data.Product)
 

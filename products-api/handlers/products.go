@@ -17,14 +17,15 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/GrosfeldEzekiel/coffee-shop/products-api/data"
+	"github.com/hashicorp/go-hclog"
 )
 
 type Products struct {
-	l *log.Logger
+	l          hclog.Logger
+	productsDB *data.ProductsDB
 }
 
 // A list of products in the response
@@ -50,8 +51,8 @@ type productIdParameter struct {
 	ID int `json:"id"`
 }
 
-func NewProducts(l *log.Logger) *Products {
-	return &Products{l}
+func NewProducts(l hclog.Logger, productsDb *data.ProductsDB) *Products {
+	return &Products{l, productsDb}
 }
 
 type KeyProduct struct{}
@@ -66,10 +67,12 @@ func (p *Products) MiddlewareProductValidation(next http.Handler) http.Handler {
 
 		if err != nil {
 			http.Error(rw, fmt.Sprintf("Bad input: %s", err), http.StatusBadRequest)
+			return
 		}
 
 		if err != nil {
 			http.Error(rw, "Unable serialize JSON", http.StatusBadRequest)
+			return
 		}
 
 		ctx := context.WithValue(r.Context(), KeyProduct{}, product)
